@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "streaming" | "done" | "error";
 
+function isAbort(err: unknown): boolean {
+  return err instanceof DOMException && err.name === "AbortError";
+}
+
 export function useStream() {
   const [status, setStatus] = useState<Status>("idle");
   const [text, setText] = useState("");
@@ -42,34 +46,28 @@ export function useStream() {
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    const res = await fetch("/api/stream", { signal: controller.signal }).catch((err) => {
-      if (err.name === "AbortError") return null;
-      setError(err instanceof Error ? err.message : "stream failed");
-      setStatus("error");
-      return null;
-    });
-    if (!res) return;
-    if (!res.ok || !res.body) {
-      setStatus("error");
-      setError(`HTTP ${res.status}`);
-      return;
-    }
+    try {
+      const res = await fetch("/api/stream", { signal: controller.signal });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder("utf-8");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
 
-    // raf-batched: avoid one render per character
-    while (true) {
-      const { value, done } = await reader.read().catch(() => ({ value: undefined, done: true }));
-      if (done) break;
-      if (value) {
+      // raf-batched: avoid one render per character
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
         bufferRef.current += decoder.decode(value, { stream: true });
         schedule();
       }
+      bufferRef.current += decoder.decode();
+      schedule();
+      setStatus("done");
+    } catch (err) {
+      if (isAbort(err)) return;
+      setError(err instanceof Error ? err.message : "stream failed");
+      setStatus("error");
     }
-    bufferRef.current += decoder.decode();
-    schedule();
-    setStatus("done");
   }, [cancel, schedule]);
 
   useEffect(() => () => cancel(), [cancel]);
