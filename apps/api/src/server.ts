@@ -5,6 +5,7 @@ import { securityPlugin } from "@/plugins/security";
 import { healthRoute } from "@/routes/health";
 import { peopleRoute } from "@/routes/people";
 import { facetsRoute } from "@/routes/facets";
+import { streamRoute } from "@/routes/stream";
 import { initDataset } from "@/lib/dataset";
 
 const DATASET_SIZE = Number(process.env.DATASET_SIZE ?? 10000);
@@ -55,6 +56,7 @@ await app.register(securityPlugin);
 await app.register(healthRoute);
 await app.register(peopleRoute);
 await app.register(facetsRoute);
+await app.register(streamRoute);
 
 app.listen({ port: PORT, host: HOST }).catch((err) => {
   app.log.error(err);
