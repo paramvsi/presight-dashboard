@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { faker } from "@faker-js/faker";
 
-const CHUNK_SIZE = 8;
-const CHUNK_DELAY_MS = 15;
+const CHUNK_SIZE = 1;
+const CHUNK_DELAY_MS = 12;
 
 export const streamRoute: FastifyPluginAsync = async (app) => {
   app.get("/api/stream", async (req, reply) => {
