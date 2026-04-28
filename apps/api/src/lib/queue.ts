@@ -15,7 +15,7 @@ const POOL_SIZE = Math.max(2, Math.min(availableParallelism(), 4));
 let pool: Worker[] = [];
 let nextWorker = 0;
 
-function spawn() {
+function spawn(slot: number) {
   const w = new Worker(workerUrl);
   w.on("message", (msg: WorkerOut) => {
     send(msg.clientId, {
@@ -25,20 +25,29 @@ function spawn() {
       completedAt: new Date().toISOString(),
     });
   });
-  w.on("error", (err) => {
-    console.error("worker error", err);
+  // a thrown error inside the worker (or crash exit) leaves a dead slot;
+  // respawn so the pool keeps full capacity.
+  const replace = (reason: string, err?: unknown) => {
+    if (pool[slot] !== w) return;
+    console.error(`worker slot ${slot} ${reason}`, err ?? "");
+    pool[slot] = spawn(slot);
+  };
+  w.on("error", (err) => replace("errored", err));
+  w.on("exit", (code) => {
+    if (code !== 0) replace(`exited with code ${code}`);
   });
   return w;
 }
 
 export function initQueue() {
   if (pool.length > 0) return;
-  pool = Array.from({ length: POOL_SIZE }, spawn);
+  pool = Array.from({ length: POOL_SIZE }, (_, i) => spawn(i));
 }
 
 export async function shutdownQueue() {
-  await Promise.all(pool.map((w) => w.terminate()));
+  const workers = pool;
   pool = [];
+  await Promise.all(workers.map((w) => w.terminate()));
 }
 
 export function enqueue({ clientId }: { clientId: string }) {
