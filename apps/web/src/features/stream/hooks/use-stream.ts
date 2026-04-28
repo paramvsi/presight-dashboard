@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "streaming" | "done" | "error";
 
+const REVEAL_PER_FRAME = 8;
+
 function isAbort(err: unknown): boolean {
   return err instanceof DOMException && err.name === "AbortError";
 }
@@ -12,29 +14,40 @@ export function useStream() {
   const [error, setError] = useState<string | null>(null);
 
   const controllerRef = useRef<AbortController | null>(null);
-  const bufferRef = useRef("");
+  const fullRef = useRef("");
+  const cursorRef = useRef(0);
+  const streamDoneRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  const flush = useCallback(() => {
+  // raf loop reveals N chars/frame; stops when cursor caught up and stream is closed
+  const tick = useCallback(() => {
     rafRef.current = null;
-    if (bufferRef.current) {
-      const next = bufferRef.current;
-      bufferRef.current = "";
-      setText((prev) => prev + next);
+    const total = fullRef.current.length;
+    const cursor = cursorRef.current;
+    if (cursor < total) {
+      const next = Math.min(cursor + REVEAL_PER_FRAME, total);
+      cursorRef.current = next;
+      setText(fullRef.current.slice(0, next));
     }
+    if (cursorRef.current >= total && streamDoneRef.current) {
+      setStatus("done");
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const schedule = useCallback(() => {
-    if (rafRef.current !== null) return;
-    rafRef.current = requestAnimationFrame(flush);
-  }, [flush]);
+  const stopRaf = () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+  };
 
   const cancel = useCallback(() => {
     controllerRef.current?.abort();
     controllerRef.current = null;
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    bufferRef.current = "";
+    stopRaf();
+    fullRef.current = "";
+    cursorRef.current = 0;
+    streamDoneRef.current = false;
     setStatus((s) => (s === "streaming" ? "idle" : s));
   }, []);
 
@@ -43,9 +56,13 @@ export function useStream() {
     setText("");
     setError(null);
     setStatus("streaming");
+    fullRef.current = "";
+    cursorRef.current = 0;
+    streamDoneRef.current = false;
 
     const controller = new AbortController();
     controllerRef.current = controller;
+    rafRef.current = requestAnimationFrame(tick);
 
     try {
       const res = await fetch("/api/stream", { signal: controller.signal });
@@ -54,22 +71,20 @@ export function useStream() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder("utf-8");
 
-      // raf-batched: avoid one render per character
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        bufferRef.current += decoder.decode(value, { stream: true });
-        schedule();
+        fullRef.current += decoder.decode(value, { stream: true });
       }
-      bufferRef.current += decoder.decode();
-      schedule();
-      setStatus("done");
+      fullRef.current += decoder.decode();
+      streamDoneRef.current = true;
     } catch (err) {
       if (isAbort(err)) return;
+      stopRaf();
       setError(err instanceof Error ? err.message : "stream failed");
       setStatus("error");
     }
-  }, [cancel, schedule]);
+  }, [cancel, tick]);
 
   useEffect(() => () => cancel(), [cancel]);
 
