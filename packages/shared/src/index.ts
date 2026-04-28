@@ -11,12 +11,19 @@ export const PersonSchema = z.object({
 });
 export type Person = z.infer<typeof PersonSchema>;
 
+// Fastify's default querystring parser yields a string for one value and an array for many;
+// preprocess so a single ?hobbies=chess parses cleanly alongside ?hobbies=a&hobbies=b.
+const stringArrayParam = z.preprocess(
+  (v) => (typeof v === "string" ? [v] : v),
+  z.array(z.string()).optional(),
+);
+
 export const PeopleQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().trim().max(100).optional(),
-  nationalities: z.array(z.string()).optional(),
-  hobbies: z.array(z.string()).optional(),
+  nationalities: stringArrayParam,
+  hobbies: stringArrayParam,
 });
 export type PeopleQuery = z.infer<typeof PeopleQuerySchema>;
 
