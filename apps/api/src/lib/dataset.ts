@@ -75,8 +75,9 @@ export function queryPeople(q: PeopleQuery): PeoplePage {
   const filtered: Person[] = [];
   for (const p of people) {
     if (search) {
-      const haystack = `${p.first_name} ${p.last_name}`.toLowerCase();
-      if (!haystack.includes(search)) continue;
+      const fn = p.first_name.toLowerCase();
+      const ln = p.last_name.toLowerCase();
+      if (!fn.startsWith(search) && !ln.startsWith(search)) continue;
     }
     if (nationalities && !nationalities.has(p.nationality)) continue;
     if (hobbies) {
