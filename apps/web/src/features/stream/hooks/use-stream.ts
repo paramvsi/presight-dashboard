@@ -35,6 +35,7 @@ export function useStream() {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     bufferRef.current = "";
+    setStatus((s) => (s === "streaming" ? "idle" : s));
   }, []);
 
   const start = useCallback(async () => {
