@@ -46,14 +46,14 @@ export function PeopleList() {
   if (items.length === 0) return <PeopleEmpty />;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
         <span>
           {items.length.toLocaleString()} of {total.toLocaleString()}
         </span>
         {isFetchingNextPage ? <span>Loading more…</span> : null}
       </div>
-      <div ref={scrollRef} className="flex-1 overflow-auto px-4 pb-6">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto px-4 pb-6">
         <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
           {virtualItems.map((row) => {
             const person = items[row.index];
