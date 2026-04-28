@@ -72,12 +72,21 @@ export function queryPeople(q: PeopleQuery): PeoplePage {
   const nationalities = q.nationalities && q.nationalities.length > 0 ? new Set(q.nationalities) : null;
   const hobbies = q.hobbies && q.hobbies.length > 0 ? new Set(q.hobbies) : null;
 
+  const tokens = search ? search.split(/\s+/).filter(Boolean) : [];
+
   const filtered: Person[] = [];
   for (const p of people) {
-    if (search) {
+    if (tokens.length > 0) {
       const fn = p.first_name.toLowerCase();
       const ln = p.last_name.toLowerCase();
-      if (!fn.startsWith(search) && !ln.startsWith(search)) continue;
+      let allMatch = true;
+      for (const t of tokens) {
+        if (!fn.startsWith(t) && !ln.startsWith(t)) {
+          allMatch = false;
+          break;
+        }
+      }
+      if (!allMatch) continue;
     }
     if (nationalities && !nationalities.has(p.nationality)) continue;
     if (hobbies) {
