@@ -73,3 +73,13 @@ export const ServerToClientMessageSchema = z.discriminatedUnion("type", [
   QueueResultMessageSchema,
 ]);
 export type ServerToClientMessage = z.infer<typeof ServerToClientMessageSchema>;
+
+export const ProblemDetailSchema = z
+  .object({
+    type: z.string().optional(),
+    title: z.string().optional(),
+    status: z.number().int().optional(),
+    detail: z.string().optional(),
+  })
+  .passthrough();
+export type ProblemDetail = z.infer<typeof ProblemDetailSchema>;

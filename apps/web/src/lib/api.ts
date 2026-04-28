@@ -1,3 +1,4 @@
+import { ProblemDetailSchema } from "@presight/shared";
 import type { ZodType } from "zod";
 
 const BASE = (import.meta.env.VITE_API_BASE ?? "/api").replace(/\/$/, "");
@@ -6,7 +7,6 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    readonly detail?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -27,12 +27,19 @@ function buildUrl(path: string, query?: GetOpts["query"]) {
   return url.toString();
 }
 
+async function readProblem(res: Response): Promise<string> {
+  const fallback = `Request failed (${res.status})`;
+  const parsed = await res
+    .json()
+    .then((body) => ProblemDetailSchema.safeParse(body))
+    .catch(() => null);
+  if (!parsed?.success) return fallback;
+  return parsed.data.detail ?? parsed.data.title ?? fallback;
+}
+
 export async function apiGet<T>(path: string, schema: ZodType<T>, opts: GetOpts = {}): Promise<T> {
   const res = await fetch(buildUrl(path, opts.query), { signal: opts.signal });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { detail?: string } | null;
-    throw new ApiError(body?.detail ?? `Request failed (${res.status})`, res.status, body);
-  }
+  if (!res.ok) throw new ApiError(await readProblem(res), res.status);
   return schema.parse(await res.json());
 }
 
@@ -48,9 +55,6 @@ export async function apiPost<TReq, TRes>(
     body: JSON.stringify(body),
     signal: opts.signal,
   });
-  if (!res.ok) {
-    const detail = (await res.json().catch(() => null)) as { detail?: string } | null;
-    throw new ApiError(detail?.detail ?? `Request failed (${res.status})`, res.status, detail);
-  }
+  if (!res.ok) throw new ApiError(await readProblem(res), res.status);
   return schema.parse(await res.json());
 }
