@@ -19,14 +19,12 @@ function PersonCardImpl({ person }: Props) {
           className="h-16 w-16 shrink-0 rounded-full bg-muted object-cover"
         />
         <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium leading-tight">
-                {person.first_name} {person.last_name}
-              </div>
-              <div className="mt-0.5 truncate text-xs text-muted-foreground">{person.nationality}</div>
-            </div>
-            <div className="text-xs tabular-nums text-muted-foreground">{person.age}</div>
+          <div className="min-w-0 truncate text-sm font-medium leading-tight">
+            {person.first_name} {person.last_name}
+          </div>
+          <div className="flex min-w-0 items-baseline justify-between gap-3 text-xs text-muted-foreground">
+            <span className="truncate">{person.nationality}</span>
+            <span className="tabular-nums">{person.age}</span>
           </div>
           <HobbyChips hobbies={person.hobbies} />
         </div>
