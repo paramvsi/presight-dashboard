@@ -27,6 +27,8 @@ pnpm build
 
 Open `http://localhost:5173/`.
 
+Stream pacing is tunable via env vars (`STREAM_CHUNK_SIZE`, `STREAM_CHUNK_DELAY_MS`) so the feature can be demoed at different speeds; defaults are tuned for a ~20 s reveal on the ~4.8 KB body.
+
 ## Architecture
 
 ```
