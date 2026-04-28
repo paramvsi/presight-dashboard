@@ -7,7 +7,7 @@ export const jobsRoute: FastifyPluginAsyncZod = async (app) => {
     "/api/jobs",
     {
       bodyLimit: 256,
-      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      config: { rateLimit: { max: 100, timeWindow: "1 minute" } },
       schema: {
         body: QueueJobRequestSchema,
         response: { 200: QueueJobAcceptedSchema },
