@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Presight frontend exercise: paginated list with virtual scroll, streaming response, and worker queue over WebSocket",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=20.0.0"
