@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Person } from "@presight/shared";
+import { cn } from "@/lib/utils";
 import { PersonCard } from "@/features/people/components/person-card";
 import { PeopleEmpty } from "@/features/people/components/people-empty";
 import { PeopleSkeleton } from "@/features/people/components/people-skeleton";
@@ -18,8 +19,17 @@ export function PeopleList() {
   const nationalities = useFiltersStore((s) => s.nationalities);
   const debouncedSearch = useDebouncedValue(search, 250);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error } =
-    usePeopleQuery({ search: debouncedSearch, hobbies, nationalities });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+    isLoading,
+    isPlaceholderData,
+    isError,
+    error,
+  } = usePeopleQuery({ search: debouncedSearch, hobbies, nationalities });
 
   const items: Person[] = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
   const total = data?.pages[0]?.total ?? 0;
@@ -45,15 +55,23 @@ export function PeopleList() {
   if (isError) return <PeopleListError error={error} />;
   if (items.length === 0) return <PeopleEmpty />;
 
+  const refreshing = isFetching && !isFetchingNextPage;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
         <span>
           {items.length.toLocaleString()} of {total.toLocaleString()}
         </span>
-        {isFetchingNextPage ? <span>Loading more…</span> : null}
+        {isFetchingNextPage ? <span>Loading more…</span> : refreshing ? <span>Updating…</span> : null}
       </div>
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto px-4 pb-6">
+      <div
+        ref={scrollRef}
+        className={cn(
+          "min-h-0 flex-1 overflow-auto px-4 pb-6 transition-opacity",
+          isPlaceholderData ? "opacity-60" : "opacity-100",
+        )}
+      >
         <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
           {virtualItems.map((row) => {
             const person = items[row.index];

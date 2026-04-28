@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { PeoplePageSchema, type PeoplePage } from "@presight/shared";
 import { apiGet } from "@/lib/api";
 
@@ -22,5 +22,6 @@ export function usePeopleQuery({ search, hobbies, nationalities }: Args) {
         },
       }),
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
+    placeholderData: keepPreviousData,
   });
 }
