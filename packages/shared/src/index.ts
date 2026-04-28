@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// ---------- Domain: Person ----------
-
 export const PersonSchema = z.object({
   id: z.string().uuid(),
   avatar: z.string().url(),
@@ -12,8 +10,6 @@ export const PersonSchema = z.object({
   hobbies: z.array(z.string()).max(10),
 });
 export type Person = z.infer<typeof PersonSchema>;
-
-// ---------- API: paginated list ----------
 
 export const PeopleQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -33,8 +29,6 @@ export const PeoplePageSchema = z.object({
 });
 export type PeoplePage = z.infer<typeof PeoplePageSchema>;
 
-// ---------- API: facets for the filter sidebar ----------
-
 export const FacetItemSchema = z.object({
   value: z.string(),
   count: z.number().int().min(0),
@@ -46,8 +40,6 @@ export const FacetsResponseSchema = z.object({
   topNationalities: z.array(FacetItemSchema).max(20),
 });
 export type FacetsResponse = z.infer<typeof FacetsResponseSchema>;
-
-// ---------- WebSocket: queue messages ----------
 
 export const QueueJobRequestSchema = z.object({
   clientId: z.string().uuid(),
@@ -68,7 +60,6 @@ export const QueueResultMessageSchema = z.object({
 });
 export type QueueResultMessage = z.infer<typeof QueueResultMessageSchema>;
 
-// Discriminated union covers any WS message the server may push to clients.
 export const ServerToClientMessageSchema = z.discriminatedUnion("type", [
   QueueResultMessageSchema,
 ]);
