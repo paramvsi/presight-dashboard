@@ -4,6 +4,7 @@ import type { Person } from "@presight/shared";
 import { PersonCard } from "@/features/people/components/person-card";
 import { PeopleEmpty } from "@/features/people/components/people-empty";
 import { PeopleSkeleton } from "@/features/people/components/people-skeleton";
+import { PeopleListError } from "@/features/people/components/people-list-error";
 import { usePeopleQuery } from "@/features/people/hooks/use-people-query";
 import { useFiltersStore } from "@/features/people/store/filters-store";
 import { useDebouncedValue } from "@/features/people/hooks/use-debounced-value";
@@ -41,13 +42,7 @@ export function PeopleList() {
   }, [lastIndex, items.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) return <PeopleSkeleton />;
-  if (isError) {
-    return (
-      <div className="p-6 text-sm text-destructive">
-        Failed to load people: {error instanceof Error ? error.message : "unknown error"}
-      </div>
-    );
-  }
+  if (isError) return <PeopleListError error={error} />;
   if (items.length === 0) return <PeopleEmpty />;
 
   return (

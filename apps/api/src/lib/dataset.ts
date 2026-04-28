@@ -1,37 +1,6 @@
 import { faker } from "@faker-js/faker";
 import type { FacetItem, FacetsResponse, PeoplePage, PeopleQuery, Person } from "@presight/shared";
-
-const HOBBIES = [
-  "reading",
-  "running",
-  "cycling",
-  "hiking",
-  "cooking",
-  "baking",
-  "photography",
-  "painting",
-  "drawing",
-  "writing",
-  "gaming",
-  "chess",
-  "yoga",
-  "swimming",
-  "climbing",
-  "surfing",
-  "skiing",
-  "knitting",
-  "gardening",
-  "woodworking",
-  "pottery",
-  "astronomy",
-  "birdwatching",
-  "fishing",
-  "guitar",
-  "piano",
-  "singing",
-  "dancing",
-  "calligraphy",
-];
+import { HOBBIES } from "@/lib/hobbies";
 
 type DatasetState = {
   people: Person[];
@@ -53,7 +22,7 @@ export function generatePeople(size: number, seed: number): Person[] {
     const id = faker.string.uuid();
     people[i] = {
       id,
-      avatar: `https://i.pravatar.cc/120?u=${id}`,
+      avatar: faker.image.avatar(),
       first_name: faker.person.firstName(),
       last_name: faker.person.lastName(),
       age: faker.number.int({ min: 18, max: 90 }),
