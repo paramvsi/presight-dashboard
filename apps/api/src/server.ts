@@ -1,4 +1,5 @@
 import Fastify, { type FastifyError } from "fastify";
+import websocket from "@fastify/websocket";
 import { ZodError } from "zod";
 import { applyZod, type ZodTypeProvider } from "@/plugins/zod";
 import { securityPlugin } from "@/plugins/security";
@@ -6,7 +7,10 @@ import { healthRoute } from "@/routes/health";
 import { peopleRoute } from "@/routes/people";
 import { facetsRoute } from "@/routes/facets";
 import { streamRoute } from "@/routes/stream";
+import { jobsRoute } from "@/routes/jobs";
+import { wsRoute } from "@/routes/ws";
 import { initDataset } from "@/lib/dataset";
+import { initQueue, shutdownQueue } from "@/lib/queue";
 
 const DATASET_SIZE = Number(process.env.DATASET_SIZE ?? 10000);
 const DATASET_SEED = Number(process.env.DATASET_SEED ?? 42);
@@ -51,12 +55,24 @@ app.setErrorHandler((err: FastifyError, req, reply) => {
 
 initDataset(DATASET_SIZE, DATASET_SEED);
 app.log.info({ size: DATASET_SIZE, seed: DATASET_SEED }, "dataset ready");
+initQueue();
 
 await app.register(securityPlugin);
+await app.register(websocket);
 await app.register(healthRoute);
 await app.register(peopleRoute);
 await app.register(facetsRoute);
 await app.register(streamRoute);
+await app.register(jobsRoute);
+await app.register(wsRoute);
+
+const shutdown = async () => {
+  await shutdownQueue();
+  await app.close();
+  process.exit(0);
+};
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 app.listen({ port: PORT, host: HOST }).catch((err) => {
   app.log.error(err);
