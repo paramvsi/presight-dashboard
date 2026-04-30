@@ -1,5 +1,7 @@
+import path from "node:path";
 import Fastify, { type FastifyError } from "fastify";
 import websocket from "@fastify/websocket";
+import staticPlugin from "@fastify/static";
 import { ZodError } from "zod";
 import { applyZod, type ZodTypeProvider } from "@/plugins/zod";
 import { securityPlugin } from "@/plugins/security";
@@ -65,6 +67,17 @@ await app.register(facetsRoute);
 await app.register(streamRoute);
 await app.register(jobsRoute);
 await app.register(wsRoute);
+
+if (!isDev) {
+  const webDist = path.resolve(import.meta.dirname, "../../web/dist");
+  await app.register(staticPlugin, { root: webDist, wildcard: false });
+  app.setNotFoundHandler((req, reply) => {
+    if (req.url.startsWith("/api") || req.url.startsWith("/ws")) {
+      return reply.status(404).send({ type: "about:blank", title: "Not Found", status: 404 });
+    }
+    return reply.sendFile("index.html");
+  });
+}
 
 const shutdown = async () => {
   await shutdownQueue();
