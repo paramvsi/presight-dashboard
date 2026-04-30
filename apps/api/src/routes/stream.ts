@@ -8,7 +8,9 @@ export const streamRoute: FastifyPluginAsync = async (app) => {
   app.get("/api/stream", async (req, reply) => {
     const text = faker.lorem.paragraphs(32, "\n\n");
     reply.raw.writeHead(200, {
-      "Content-Type": "text/plain; charset=utf-8",
+      // text/event-stream forces Cloudflare/edge proxies to skip response buffering.
+      // Body is still raw text; the fetch+ReadableStream reader on the client is content-type-agnostic.
+      "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       "X-Accel-Buffering": "no",
     });
