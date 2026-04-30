@@ -1,6 +1,6 @@
 # Presight Dashboard
 
-A three-feature take-home: a virtualized people list with faceted filters, a chunked-text streaming viewer, and a worker queue whose results are pushed back over WebSocket.
+A three-feature application: a virtualized people list with faceted filters, a chunked-text streaming viewer, and a worker queue whose results are pushed back over WebSocket.
 
 ## Stack
 
