@@ -10,7 +10,7 @@ const navItems = [
 
 export function AppShell() {
   return (
-    <div className="grid h-screen grid-cols-[220px_1fr] grid-rows-[1fr]">
+    <div className="mx-auto grid h-screen max-w-[1080px] grid-cols-[220px_1fr] grid-rows-[1fr]">
       <aside className="border-r bg-muted/30 p-4">
         <div className="mb-6 px-2 text-sm font-semibold tracking-tight">Presight</div>
         <nav className="flex flex-col gap-1">
