@@ -9,7 +9,7 @@ export const streamRoute: FastifyPluginAsync = async (app) => {
     const text = faker.lorem.paragraphs(32, "\n\n");
     reply.raw.writeHead(200, {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-transform",
       "X-Accel-Buffering": "no",
     });
     reply.hijack();
